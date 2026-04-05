@@ -1,5 +1,14 @@
+import { getCached, setCache } from '../../../lib/cache';
+
 export async function POST(request) {
     const { country, module } = await request.json();
+
+    // Check cache first (briefings cached for 60 min since they change less)
+    const cacheKey = `briefing-${country}-${module}`;
+    const cached = getCached(cacheKey);
+    if (cached) {
+        return Response.json({ ...cached, fromCache: true });
+    }
 
     const prompts = {
         overview: `Give a concise geopolitical briefing on ${country} in 2026. Cover: current political system & leader, major domestic issues, international positioning, and 2-3 key things someone studying IR should know. Be direct and analytical. 200 words max.`,
@@ -32,8 +41,16 @@ export async function POST(request) {
             .filter(Boolean)
             .join('\n');
 
-        return Response.json({ briefing: text });
+        const result = { briefing: text };
+
+        // Cache briefings for 60 minutes
+        setCache(cacheKey, result, 60);
+
+        return Response.json(result);
     } catch (error) {
-        return Response.json({ briefing: 'Error generating briefing. Check your API key.' }, { status: 500 });
+        return Response.json(
+            { briefing: 'Error generating briefing. Check your API key.' },
+            { status: 500 }
+        );
     }
 }
