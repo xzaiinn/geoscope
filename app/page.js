@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import Sidebar from '../components/Sidebar';
-import { countries } from '../components/Map';
+import { countries } from '../components/data';
 
 const Map = dynamic(() => import('../components/Map'), { ssr: false });
 
